@@ -1,4 +1,4 @@
-package com.exmpale.api
+package com.exmpale.currency.api
 
 import com.exmpale.currency.data.model.CurrencyResponse
 import io.reactivex.Single

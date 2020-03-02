@@ -2,15 +2,17 @@ package com.exmpale.currency.presentation.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.exmpale.currency.domain.usecase.GetCurrencyUseCase
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
+import javax.inject.Inject
 
 /**
  * @author Kashonkov Nikita
  */
-class CurrencyViewModel : ViewModel() {
+class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase): ViewModel() {
     private var currencySubscription = Disposables.disposed()
 
     private var errorMessage: String? = null
@@ -23,8 +25,6 @@ class CurrencyViewModel : ViewModel() {
     }
 
     fun getCurrency() {
-        val useCase = GetCurrencyUseCase()
-
         currencySubscription = useCase.getCurrency()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
