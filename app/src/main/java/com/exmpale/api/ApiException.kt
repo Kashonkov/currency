@@ -4,13 +4,9 @@ package com.exmpale.api
  * @author Kashonkov Nikita
  */
 class ApiException : Exception {
-    /**
-     * Http статус ответа
-     */
+
     val statusCode: Int
-    /**
-     * Ошибка API
-     */
+
     val apiError: ApiError?
 
     constructor(statusCode: Int) {

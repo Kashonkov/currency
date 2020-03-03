@@ -1,5 +1,6 @@
 package com.exmpale.currency.api
 
+import com.exmpale.api.Response
 import com.exmpale.currency.data.model.CurrencyResponse
 import io.reactivex.Single
 import retrofit2.http.GET
@@ -9,5 +10,5 @@ import retrofit2.http.GET
  */
 interface CurrencyApi {
     @GET("latest?base=EUR")
-    fun getCurrency(): Single<CurrencyResponse>
+    fun getCurrency(): Single<Response<CurrencyResponse>>
 }

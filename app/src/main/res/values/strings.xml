@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Currency</string>
+    <string name="error_unknown">Неизвестная ошибка</string>
+    <string name="error_server">Ошибка сервера</string>
+    <string name="error_no_internet_connection">Нет соединения с интернетом</string>
+    <string name="error_timeout">Ответ от сервера не получен</string>
+    <string name="error_connect">Сервер недоступен</string>
 </resources>

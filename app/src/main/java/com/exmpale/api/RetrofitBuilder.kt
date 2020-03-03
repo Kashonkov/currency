@@ -12,7 +12,8 @@ import javax.inject.Inject
 /**
  * @author Kashonkov Nikita
  */
-private const val BASE_URL = "https://hiring.revolut.codes/api/android/"
+private const val BASE_URL = "https://hiring.revolut.codes/api/androi/"
+
 class RetrofitBuilder @Inject constructor(val apiHttpClientBuilder: HttpClientBuilder) {
 
     fun build(): Retrofit {
@@ -31,7 +32,7 @@ class RetrofitBuilder @Inject constructor(val apiHttpClientBuilder: HttpClientBu
     }
 }
 
-class HttpClientBuilder @Inject constructor(val baseOkHttpClient: OkHttpClient){
+class HttpClientBuilder @Inject constructor(val baseOkHttpClient: OkHttpClient) {
     private val TIMEOUT: Long = 15
 
     fun build(): OkHttpClient {

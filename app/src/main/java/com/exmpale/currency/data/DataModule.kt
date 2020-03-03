@@ -1,7 +1,10 @@
 package com.exmpale.currency.data
 
+import android.content.Context
 import com.exmpale.currency.api.CurrencyApi
+import com.exmpale.currency.data.helper.ErrorHandlerImpl
 import com.exmpale.currency.data.repository.RepositoryImpl
+import com.exmpale.currency.domain.helper.ErrorHandler
 import com.exmpale.currency.domain.repository.Repository
 import dagger.Module
 import dagger.Provides
@@ -20,4 +23,8 @@ class DataModule {
     @Provides
     @Singleton
     fun repository(api: CurrencyApi): Repository = RepositoryImpl(api)
+
+    @Provides
+    @Singleton
+    fun errorHandler(context: Context): ErrorHandler = ErrorHandlerImpl(context)
 }

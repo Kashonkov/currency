@@ -7,7 +7,7 @@ import com.exmpale.currency.domain.entity.RateEntity
  * @author Kashonkov Nikita
  */
 fun convertToCurrencyEntity(currencyResponse: CurrencyResponse): CurrencyEntity {
-    val rates = currencyResponse.rates.map {entry ->
+    val rates = currencyResponse.rates.map { entry ->
         RateEntity(
             entry.key,
             entry.value

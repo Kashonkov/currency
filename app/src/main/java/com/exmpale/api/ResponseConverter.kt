@@ -1,7 +1,6 @@
 package com.exmpale.api
 
 import retrofit2.Retrofit
-import java.lang.Exception
 import javax.inject.Inject
 
 /**
@@ -9,15 +8,6 @@ import javax.inject.Inject
  */
 class ResponseConverter @Inject internal constructor(private val retrofit: Retrofit) {
 
-//    private val logger = LoggerFactory.getLogger(ResponseConverter::class)
-
-    /**
-     * Конвертирует [retrofit2.Response] в сущность типа [E].
-     *
-     * @param retrofitResponse Ответ сервера в формате [Retrofit]
-     * @param <E>              Тип сущности сервера
-     * @return Ответ сервера в виде сущности типа [E]
-     * @throws ApiException В случае ошибки  ковертации*/
     @Throws(ApiException::class)
     fun <E> convertToEntity(retrofitResponse: retrofit2.Response<E>): E {
         val response = convert(retrofitResponse);
@@ -28,13 +18,6 @@ class ResponseConverter @Inject internal constructor(private val retrofit: Retro
         }
     }
 
-    /**
-     * Конвертирует [retrofit2.Response] в [Response].
-     *
-     * @param retrofitResponse Ответ сервера в формате [Retrofit]
-     * @param <E>              Тип сущности сервера
-     * @return Ответ сервера в формате [Response]
-     * @throws ApiException В случае ошибки  ковертации*/
     @Throws(ApiException::class)
     fun <E> convert(retrofitResponse: retrofit2.Response<E>): Response<E> {
         if (retrofitResponse.isSuccessful) {

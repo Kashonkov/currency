@@ -1,18 +1,20 @@
 package com.exmpale.currency.presentation.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.exmpale.currency.domain.usecase.GetCurrencyUseCase
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
+import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 /**
  * @author Kashonkov Nikita
  */
-class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase): ViewModel() {
+const val PERIOD_IN_SECONDS = 1L
+class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : ViewModel() {
     private var currencySubscription = Disposables.disposed()
 
     private var errorMessage: String? = null
@@ -25,15 +27,20 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase): Vi
     }
 
     fun getCurrency() {
-        currencySubscription = useCase.getCurrency()
+        currencySubscription = Observable.interval(PERIOD_IN_SECONDS, TimeUnit.SECONDS, Schedulers.io())
+            .flatMapSingle { useCase.getCurrency()}
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnError{Log.i("myLog", "${it.javaClass}")}
             .retry()
-            .subscribe({ response ->
-                Log.i("myLog", "${response.rates.joinToString()}")
+            .subscribe({ result ->
+                if(result.isSuccessful) {
+                    Timber.i(result.data!!.rates.joinToString())
+                } else {
+                    Timber.i("Some error")
+                }
             }, { error ->
-                Log.i("myLog", "${error.localizedMessage}")
+                1+1
+                Timber.i( error.localizedMessage)
             })
     }
 }

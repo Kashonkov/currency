@@ -1,10 +1,10 @@
 package com.exmpale.currency.domain
 
+import com.exmpale.currency.domain.helper.ErrorHandler
 import com.exmpale.currency.domain.repository.Repository
 import com.exmpale.currency.domain.usecase.GetCurrencyUseCase
 import dagger.Module
 import dagger.Provides
-import javax.inject.Singleton
 
 /**
  * @author Kashonkov Nikita
@@ -12,6 +12,6 @@ import javax.inject.Singleton
 @Module
 class DomainModule {
     @Provides
-    @Singleton
-    fun currencyUseCase(repository: Repository): GetCurrencyUseCase = GetCurrencyUseCase(repository)
+    fun currencyUseCase(repository: Repository, errorHandler: ErrorHandler): GetCurrencyUseCase =
+        GetCurrencyUseCase(repository, errorHandler)
 }
