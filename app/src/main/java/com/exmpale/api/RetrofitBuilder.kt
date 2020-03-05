@@ -19,14 +19,10 @@ class RetrofitBuilder @Inject constructor(val apiHttpClientBuilder: HttpClientBu
     fun build(): Retrofit {
         val client = apiHttpClientBuilder.build()
 
-        //TODO  проврить работу без этого
-        val gsonBuilder = GsonBuilder()
-        val gson = gsonBuilder.create()
-
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)
-            .addConverterFactory(GsonConverterFactory.create(gson))
+            .addConverterFactory(GsonConverterFactory.create(GsonBuilder().create()))
             .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
             .build()
     }

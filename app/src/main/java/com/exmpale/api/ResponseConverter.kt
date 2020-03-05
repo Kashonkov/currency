@@ -21,21 +21,18 @@ class ResponseConverter @Inject internal constructor(private val retrofit: Retro
     @Throws(ApiException::class)
     fun <E> convert(retrofitResponse: retrofit2.Response<E>): Response<E> {
         if (retrofitResponse.isSuccessful) {
-            // Если запрос завершился успешно
             val data = retrofitResponse.body()
             return Response(data, null, retrofitResponse.code())
         } else {
-            // Если запрос завершился неудачно
             val responseBody = retrofitResponse.errorBody()
                 ?: throw ApiException(retrofitResponse.code())
+            var message = ""
             try {
-                // Пробуем получить тело ответа как строку
-                val message = responseBody.string()
-                throw ApiException(message, retrofitResponse.code())
+                message = responseBody.string()
             } catch (e: Exception) {
-//                logger.error("Error while getting response body as string", e)
                 throw ApiException(e, retrofitResponse.code())
             }
+            throw ApiException(message, retrofitResponse.code())
         }
     }
 }

@@ -39,7 +39,6 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                     Timber.i("Some error")
                 }
             }, { error ->
-                1+1
                 Timber.i( error.localizedMessage)
             })
     }

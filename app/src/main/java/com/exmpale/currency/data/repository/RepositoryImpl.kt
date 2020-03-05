@@ -12,6 +12,8 @@ import io.reactivex.Single
  */
 class RepositoryImpl constructor(val currencyApi: CurrencyApi, val responseConverter: ResponseConverter) : Repository {
     override fun getCurrency(): Single<CurrencyEntity> {
-        return currencyApi.getCurrency().map { convertToCurrencyEntity(it) }
+        return currencyApi.getCurrency()
+            .map { responseConverter.convertToEntity(it) }
+            .map { convertToCurrencyEntity(it) }
     }
 }

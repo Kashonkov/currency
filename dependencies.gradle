@@ -16,7 +16,6 @@ ext {
     // Kotlin
     depsKotlin = dependencyGroup {
         implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
-        implementation 'androidx.core:core-ktx:1.2.0'
     }
 
     // RxKotlin
@@ -41,6 +40,9 @@ ext {
     //Andoid
     depsAndroid= dependencyGroup{
         implementation 'androidx.appcompat:appcompat:1.0.2'
+        implementation "androidx.fragment:fragment:1.2.2"
+        implementation "androidx.fragment:fragment-ktx:1.2.2"
+        implementation 'androidx.core:core-ktx:1.2.0'
     }
 
     // Support annotations

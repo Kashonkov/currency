@@ -25,8 +25,6 @@ class ErrorHandlerImpl(context: Context) : ErrorHandler {
 
     private val unknownErrorMsg = context.getString(R.string.error_unknown)
 
-    val unknownError = RemoteError(unknownErrorMsg)
-
     override fun handle(e: Throwable): UserError {
         return if (e is ApiException) {
             if (e.statusCode in 502..504) {
@@ -34,7 +32,12 @@ class ErrorHandlerImpl(context: Context) : ErrorHandler {
             } else {
                 val apiError = e.apiError
                 return if (apiError == null) {
-                    RemoteError(serverErrorMsg)
+                    val message = e.message
+                    if (message.isNullOrEmpty()) {
+                        RemoteError("$serverErrorMsg (${e.statusCode})")
+                    } else {
+                        RemoteError(message)
+                    }
                 } else {
                     RemoteError(apiError.message)
                 }
