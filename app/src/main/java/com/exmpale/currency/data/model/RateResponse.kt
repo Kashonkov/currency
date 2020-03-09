@@ -3,7 +3,7 @@ package com.exmpale.currency.data.model
 /**
  * @author Kashonkov Nikita
  */
-data class CurrencyResponse constructor(
+data class RateResponse constructor(
     val baseCurrency: String,
-    val rates: Map<String, Double>
+    val rates: Map<String, Double>?
 )

@@ -1,17 +1,19 @@
 package com.exmpale.currency.data.model
 
-import com.exmpale.currency.domain.entity.CurrencyEntity
-import com.exmpale.currency.domain.entity.RateEntity
+import com.exmpale.currency.domain.entity.CurrencyRateEntity
+import com.exmpale.currency.domain.entity.RatesEntity
 
 /**
  * @author Kashonkov Nikita
  */
-fun convertToCurrencyEntity(currencyResponse: CurrencyResponse): CurrencyEntity {
-    val rates = currencyResponse.rates.map { entry ->
-        RateEntity(
-            entry.key,
-            entry.value
-        )
-    }.toSet()
-    return CurrencyEntity(currencyResponse.baseCurrency, rates)
+fun convertToRatesEntity(currencyResponse: RateResponse): RatesEntity {
+
+    val baseCurrency = CurrencyRateEntity(currencyResponse.baseCurrency, 1.0, true)
+    val currencySet = mutableSetOf(baseCurrency.name)
+    val currencies = currencyResponse.rates?.mapValues { it ->
+        currencySet.add(it.key)
+        CurrencyRateEntity(it.key, it.value, false)
+    }
+
+    return RatesEntity(baseCurrency, currencies, currencySet)
 }

@@ -12,7 +12,7 @@ import javax.inject.Inject
 /**
  * @author Kashonkov Nikita
  */
-private const val BASE_URL = "https://hiring.revolut.codes/api/androi/"
+private const val BASE_URL = "https://hiring.revolut.codes/api/android/"
 
 class RetrofitBuilder @Inject constructor(val apiHttpClientBuilder: HttpClientBuilder) {
 

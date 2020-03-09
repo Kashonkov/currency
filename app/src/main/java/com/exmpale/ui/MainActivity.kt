@@ -10,8 +10,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val transaction = supportFragmentManager.beginTransaction()
-        transaction.add(R.id.fragment_container, CurrencyFragment.newInstance())
-        transaction.commit()
+        if (supportFragmentManager.findFragmentByTag(CurrencyFragment.FRAGMENT_TAG) == null) {
+            val transaction = supportFragmentManager.beginTransaction()
+            transaction.add(
+                R.id.fragment_container,
+                CurrencyFragment.newInstance(),
+                CurrencyFragment.FRAGMENT_TAG
+            )
+            transaction.commit()
+        }
     }
 }
