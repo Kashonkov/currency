@@ -39,6 +39,8 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
     private var currencies: List<Currency>? = null
     private var currentRates: RatesEntity? = null
 
+    private var canHandleReorder = true
+
     init {
         getCurrency(BuildConfig.BASE_CURRENCY)
     }
@@ -208,7 +210,10 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
     }
 
     private fun changeBaseCurrency(currencyPosition: Int) = Single.fromCallable {
-        if (currentBaseCurrency === currencies!![currencyPosition]) return@fromCallable false
+        canHandleReorder = false
+        if (currentBaseCurrency === currencies!![currencyPosition]){
+            return@fromCallable false
+        }
         currencySubscription.dispose()
         val oldBaseCurrency = currentBaseCurrency!!.copy(isBaseCurrency = false)
         val newBaseCurrency = currencies!![currencyPosition].copy(isBaseCurrency = true)
@@ -218,10 +223,12 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         getCurrency(currentBaseCurrency!!.name)
         return@fromCallable true
     }.subscribeOn(converterScheduler)
+        .observeOn(AndroidSchedulers.mainThread())
         .subscribe { shouldRenew ->
             if (shouldRenew) {
                 _currenciesStream.postValue(currencies)
             }
+            canHandleReorder = true
         }
 
     private fun changeInputtedValue(value: Double) {
