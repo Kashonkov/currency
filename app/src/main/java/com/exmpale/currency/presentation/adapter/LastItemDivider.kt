@@ -27,7 +27,7 @@ class LastItemDivider : RecyclerView.ItemDecoration() {
 
     }
 
-    private  fun dp2px(dp: Int): Int{
-        return (dp*Resources.getSystem().displayMetrics.density).toInt()
+    private fun dp2px(dp: Int): Int {
+        return (dp * Resources.getSystem().displayMetrics.density).toInt()
     }
 }

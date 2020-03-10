@@ -9,12 +9,12 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleObserver
 import com.exmpale.currency.R
 import com.exmpale.currency.presentation.model.Currency
-import com.exmpale.estensions.toFormatedString
+import com.exmpale.extensions.toFormatedString
 import com.exmpale.ui.base.BaseRecyclerAdapter
 import com.exmpale.ui.helper.CurrencyTextWatcher
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposables
-import timber.log.Timber
 
 /**
  * @author Kashonkov Nikita
@@ -34,9 +34,7 @@ class CurrencyAdapter :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CurrencyViewHolder {
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.item_currency, parent, false)
-        val viewHolder = CurrencyViewHolder(view)
-        Timber.i("${this@CurrencyAdapter} create viewHolder ${viewHolder}")
-        return viewHolder
+        return CurrencyViewHolder(view)
     }
 
     override fun getDiffCallBack(
@@ -81,12 +79,11 @@ class CurrencyAdapter :
             } else {
                 touchHelper.isVisible = true
                 changeValueDisposable =
-                    model.value.subscribe {
+                    model.value.observeOn(AndroidSchedulers.mainThread()).subscribe {
                         currencyValue.setText(it.toFormatedString())
                     }
                 viewHolderDisposables.add(changeValueDisposable)
             }
-
         }
 
         override fun unbindHolder() {

@@ -7,15 +7,14 @@ import com.exmpale.currency.BuildConfig
 import com.exmpale.currency.domain.entity.RatesEntity
 import com.exmpale.currency.domain.usecase.GetCurrencyUseCase
 import com.exmpale.currency.presentation.model.Currency
+import com.exmpale.helper.converterScheduler
+import io.reactivex.Completable
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
-import timber.log.Timber
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadFactory
-import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -36,13 +35,12 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
 
     private var currencySubscription = Disposables.disposed()
     private var currentBaseCurrency: Currency? = null
-    private var currentInputedValue = 228.30
-
+    private var currentInputtedValue = 0.0
     private var currencies: List<Currency>? = null
     private var currentRates: RatesEntity? = null
 
     init {
-        getCurrency()
+        getCurrency(BuildConfig.BASE_CURRENCY)
     }
 
     override fun onCleared() {
@@ -50,31 +48,25 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         super.onCleared()
     }
 
-    fun onValueChange(value: Double) {
-        currentInputedValue = value
-        if (this.currencies != null) {
-            countCurrencyValues()
-        }
-    }
+    fun onValueChange(value: Double) = changeInputtedValue(value)
 
     fun onBaseCurrencySelected(currencyPosition: Int) {
         changeBaseCurrency(currencyPosition)
     }
 
-    private fun getCurrency() {
+    private fun getCurrency(currencyName: String) {
         currencySubscription =
             Observable.interval(PERIOD_IN_SECONDS, TimeUnit.SECONDS, Schedulers.io())
                 .flatMapSingle {
                     useCase.getCurrency(
-                        currentBaseCurrency?.name ?: BuildConfig.BASE_CURRENCY
+                        currencyName
                     )
                 }
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .retry()
-                .subscribe({ result ->
+                .observeOn(converterScheduler)
+                .doOnNext { result ->
                     if (result.isSuccessful) {
-                        _errorsStream.postValue(null)
                         val ratesEntity = result.data
                         if (!ratesEntity!!.isCurrenciesEquals(currentRates)) {
                             currentRates = ratesEntity
@@ -83,8 +75,12 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                             currentRates = ratesEntity
                             countCurrencyValues()
                         }
-
-                        Timber.i(result.data.baseCurrencyRate.name)
+                    }
+                }
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ result ->
+                    if (result.isSuccessful) {
+                        _errorsStream.postValue(null)
                     } else {
                         result.error?.let { error ->
                             _errorsStream.postValue(error.message)
@@ -109,7 +105,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
             currentBaseCurrency = Currency(
                 rates.baseCurrencyRate.name,
                 true,
-                BehaviorSubject.createDefault(currentInputedValue)
+                BehaviorSubject.createDefault(currentInputtedValue)
             )
             currencyList.add(currentBaseCurrency!!)
             rates.currenciesRates?.let {
@@ -125,7 +121,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
             currentBaseCurrency = Currency(
                 currentBaseCurrency!!.name,
                 true,
-                BehaviorSubject.createDefault(currentInputedValue)
+                BehaviorSubject.createDefault(currentInputtedValue)
             )
             currencyList.add(currentBaseCurrency!!)
 
@@ -134,7 +130,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                 Currency(
                     rates.baseCurrencyRate.name,
                     false,
-                    BehaviorSubject.createDefault(currentInputedValue / selectedCurrencyRate)
+                    BehaviorSubject.createDefault(currentInputtedValue / selectedCurrencyRate)
                 )
             )
 
@@ -160,13 +156,12 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
     }
 
     private fun countCurrencyValues() {
-        Timber.i("recounting")
         if (currentBaseCurrency!!.name != currentRates?.baseCurrencyRate?.name) {
             countCurrencyValuesUsingCrosses()
         } else {
             currencies!!.forEach { currency ->
                 if (currency.isBaseCurrency) {
-                    currency.value.onNext(currentInputedValue)
+                    currency.value.onNext(currentInputtedValue)
                 } else {
                     currentRates!!.currenciesRates?.let {
                         currency.value.onNext(countValue(it[currency.name]?.rate ?: 0.0))
@@ -180,9 +175,9 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         val baseCurrencyRate = currentRates!!.currenciesRates!![currentBaseCurrency!!.name]!!.rate
         currencies!!.forEach { currency ->
             if (currency.isBaseCurrency) {
-                currency.value.onNext(currentInputedValue)
+                currency.value.onNext(currentInputtedValue)
             } else if (currency.name == currentRates!!.baseCurrencyRate.name) {
-                currency.value.onNext(currentInputedValue / baseCurrencyRate)
+                currency.value.onNext(currentInputtedValue / baseCurrencyRate)
             } else {
                 currentRates!!.currenciesRates?.let {
                     currency.value.onNext(
@@ -205,41 +200,42 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         newCurrencies.add(newBase)
         newCurrencies.add(oldBase)
         for (i in currencies!!.indices) {
-            if (i != 0 && i != swappedPosition){
+            if (i != 0 && i != swappedPosition) {
                 newCurrencies.add(currencies!![i])
             }
         }
         return newCurrencies
     }
 
-    private fun changeBaseCurrency(currencyPosition: Int) {
-        if(currentBaseCurrency === currencies!![currencyPosition]) return
+    private fun changeBaseCurrency(currencyPosition: Int) = Single.fromCallable {
+        if (currentBaseCurrency === currencies!![currencyPosition]) return@fromCallable false
         currencySubscription.dispose()
-
         val oldBaseCurrency = currentBaseCurrency!!.copy(isBaseCurrency = false)
         val newBaseCurrency = currencies!![currencyPosition].copy(isBaseCurrency = true)
         currencies = reorderCurrencies(currencyPosition, oldBaseCurrency, newBaseCurrency)
         currentBaseCurrency = newBaseCurrency
-        currentInputedValue = currentBaseCurrency!!.value.value
+        currentInputtedValue = currentBaseCurrency!!.value.value
+        getCurrency(currentBaseCurrency!!.name)
+        return@fromCallable true
+    }.subscribeOn(converterScheduler)
+        .subscribe { shouldRenew ->
+            if (shouldRenew) {
+                _currenciesStream.postValue(currencies)
+            }
+        }
 
-        getCurrency()
-
-        _currenciesStream.postValue(currencies)
+    private fun changeInputtedValue(value: Double) {
+        Completable.fromCallable {
+            currentInputtedValue = value
+            if (this.currencies != null) {
+                countCurrencyValues()
+            }
+        }.subscribeOn(converterScheduler)
+            .subscribe()
     }
 
-    private fun countValue(rate: Double) = currentInputedValue * rate
-    private fun countValueCross(crossRate: Double, rate: Double) =
-        currentInputedValue / crossRate * rate
+    private fun countValue(rate: Double) = currentInputtedValue * rate
 
-    private val converterScheduler = Schedulers.from(
-        ThreadPoolExecutor(
-            1,
-            1,
-            0L,
-            TimeUnit.MILLISECONDS,
-            LinkedBlockingQueue<Runnable>(),
-            ThreadFactory {
-                Thread(it)
-            })
-    )
+    private fun countValueCross(crossRate: Double, rate: Double) =
+        currentInputtedValue / crossRate * rate
 }

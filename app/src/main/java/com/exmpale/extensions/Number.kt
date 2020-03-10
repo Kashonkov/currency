@@ -1,4 +1,4 @@
-package com.exmpale.estensions
+package com.exmpale.extensions
 
 import java.math.BigDecimal
 import java.math.RoundingMode

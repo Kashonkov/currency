@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
@@ -81,6 +82,7 @@ class CurrencyFragment : Fragment() {
     }
 
     private val errorObserver = Observer<String?> { message ->
+        progress.isVisible = false
         if (message.isNullOrEmpty()) {
             if (snackbar != null && snackbar!!.isShownOrQueued) {
                 snackbar!!.dismiss()
@@ -97,8 +99,9 @@ class CurrencyFragment : Fragment() {
     }
 
     private val dataObserver = Observer<List<Currency>> { rates ->
+        progress.isVisible = false
         currencyAdapter.setItems(rates)
-        if(rates.isNotEmpty()) {
+        if (rates.isNotEmpty()) {
             linearManager.scrollToPosition(0)
         }
     }

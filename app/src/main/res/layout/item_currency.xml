@@ -59,7 +59,7 @@
             android:textColor="@color/mainTextColor"
             app:layout_constrainedWidth="true"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.75"
+            app:layout_constraintHorizontal_bias="0.85"
             app:layout_constraintStart_toEndOf="@id/value_guideline"
             tools:text="12345.5" />
 
