@@ -13,7 +13,6 @@ import io.reactivex.disposables.Disposables
 import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
-import java.text.NumberFormat
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
@@ -51,10 +50,8 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         super.onCleared()
     }
 
-    fun onValueChange(value: String) {
-        val format: NumberFormat = NumberFormat.getInstance()
-        val number: Number? = format.parse(value)
-        currentInputedValue = number?.toDouble() ?: 0.0
+    fun onValueChange(value: Double) {
+        currentInputedValue = value
         if (this.currencies != null) {
             countCurrencyValues()
         }
@@ -81,7 +78,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                         val ratesEntity = result.data
                         if (!ratesEntity!!.isCurrenciesEquals(currentRates)) {
                             currentRates = ratesEntity
-                            createNewCurrencyData(result.data)
+                            createNewCurrencies(result.data)
                         } else {
                             currentRates = ratesEntity
                             countCurrencyValues()
@@ -92,17 +89,15 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                         result.error?.let { error ->
                             _errorsStream.postValue(error.message)
                         }
-                        Timber.i(result.error?.message)
                     }
                 }, { error ->
                     error.localizedMessage?.let {
                         _errorsStream.postValue(error.localizedMessage)
                     }
-                    Timber.i(error.localizedMessage)
                 })
     }
 
-    private fun createNewCurrencyData(rates: RatesEntity) {
+    private fun createNewCurrencies(rates: RatesEntity) {
         val currencyList = mutableListOf<Currency>()
 
         if (currentBaseCurrency == null || currentBaseCurrency!!.name == rates.baseCurrencyRate.name ||
@@ -226,11 +221,10 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         currencies = reorderCurrencies(currencyPosition, oldBaseCurrency, newBaseCurrency)
         currentBaseCurrency = newBaseCurrency
         currentInputedValue = currentBaseCurrency!!.value.value
-        Timber.i("currentValue = $currentInputedValue")
+
         getCurrency()
 
         _currenciesStream.postValue(currencies)
-
     }
 
     private fun countValue(rate: Double) = currentInputedValue * rate

@@ -13,8 +13,8 @@ private val decFormat = DecimalFormat().apply {
     setMinimumFractionDigits(2);
 }
 
-fun Double.toFormatedString(): String{
+fun Double.toFormatedString(): String {
     val bd = BigDecimal(this)
     bd.setScale(2, RoundingMode.FLOOR)
-    return  decFormat.format(bd)
+    return decFormat.format(bd)
 }

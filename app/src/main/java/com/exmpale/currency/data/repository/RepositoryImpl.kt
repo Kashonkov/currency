@@ -10,7 +10,10 @@ import io.reactivex.Single
 /**
  * @author Kashonkov Nikita
  */
-class RepositoryImpl constructor(val currencyApi: CurrencyApi, val responseConverter: ResponseConverter) : Repository {
+class RepositoryImpl constructor(
+    val currencyApi: CurrencyApi,
+    val responseConverter: ResponseConverter
+) : Repository {
     override fun getCurrency(currencyName: String): Single<RatesEntity> {
         return currencyApi.getCurrency(currencyName)
             .map { responseConverter.convertToEntity(it) }

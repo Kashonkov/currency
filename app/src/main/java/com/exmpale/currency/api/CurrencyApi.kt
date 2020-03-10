@@ -11,5 +11,5 @@ import retrofit2.http.Query
  */
 interface CurrencyApi {
     @GET("latest")
-    fun getCurrency(@Query("base")currencyName: String): Single<Response<RateResponse>>
+    fun getCurrency(@Query("base") currencyName: String): Single<Response<RateResponse>>
 }

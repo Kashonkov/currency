@@ -2,14 +2,12 @@ package com.exmpale.ui.base
 
 import android.content.Context
 import android.view.View
-import androidx.annotation.CallSuper
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.disposables.Disposable
-import java.util.ArrayList
+import java.util.*
 
-abstract class BaseRecyclerAdapter<M, VH : BaseRecyclerAdapter.ViewHolder<M>> : RecyclerView.Adapter<VH>() {
+abstract class BaseRecyclerAdapter<M, VH : BaseRecyclerAdapter.ViewHolder<M>> :
+    RecyclerView.Adapter<VH>() {
     internal val items = ArrayList<M>()
 
     override fun getItemCount(): Int {

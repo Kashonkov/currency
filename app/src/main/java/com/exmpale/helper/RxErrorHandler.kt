@@ -4,7 +4,6 @@ import com.exmpale.api.ApiException
 import io.reactivex.exceptions.UndeliverableException
 import io.reactivex.functions.Consumer
 import timber.log.Timber
-import java.lang.RuntimeException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException

@@ -9,9 +9,9 @@ data class RatesEntity(
     val baseCurrencyRate: CurrencyRateEntity,
     val currenciesRates: Map<String, CurrencyRateEntity>?,
     val currenciesSet: MutableSet<String>
-){
-    fun isCurrenciesEquals(ratesEntity: RatesEntity?): Boolean{
-        if(ratesEntity == null) return false
+) {
+    fun isCurrenciesEquals(ratesEntity: RatesEntity?): Boolean {
+        if (ratesEntity == null) return false
         return currenciesSet == ratesEntity.currenciesSet
     }
 }

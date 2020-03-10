@@ -2,10 +2,10 @@ package com.exmpale.ui.base
 
 import androidx.recyclerview.widget.DiffUtil
 
-abstract class BaseDiffUtilCallback<T> (
+abstract class BaseDiffUtilCallback<T>(
     val oldItems: List<T>,
     val newItems: List<T>
-): DiffUtil.Callback() {
+) : DiffUtil.Callback() {
 
     override fun getOldListSize(): Int = oldItems.size
 
@@ -23,7 +23,7 @@ abstract class BaseDiffUtilCallback<T> (
         return getChangePayload(oldItems[oldItemPosition], newItems[newItemPosition])
     }
 
-    open fun getChangePayload(oldItem: T, newItem: T): Any?{
+    open fun getChangePayload(oldItem: T, newItem: T): Any? {
         return null
     }
 

@@ -23,7 +23,8 @@ class DataModule {
 
     @Provides
     @Singleton
-    fun repository(api: CurrencyApi, converter: ResponseConverter): Repository = RepositoryImpl(api, converter)
+    fun repository(api: CurrencyApi, converter: ResponseConverter): Repository =
+        RepositoryImpl(api, converter)
 
     @Provides
     @Singleton

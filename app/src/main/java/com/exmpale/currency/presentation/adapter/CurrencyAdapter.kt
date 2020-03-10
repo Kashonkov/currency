@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.lifecycle.LifecycleObserver
 import com.exmpale.currency.R
 import com.exmpale.currency.presentation.model.Currency
@@ -22,7 +23,7 @@ class CurrencyAdapter :
     BaseRecyclerAdapter<Currency, CurrencyAdapter.CurrencyViewHolder>(), LifecycleObserver {
 
     var itemClickListener: ((Int) -> Unit)? = null
-    var valueChangeListener: ((String) -> Unit)? = null
+    var valueChangeListener: ((Double) -> Unit)? = null
     val viewHolderDisposables = CompositeDisposable()
     val baseTextWatcher: CurrencyTextWatcher by lazy { CurrencyTextWatcher(valueChangeListener) }
 
@@ -51,11 +52,11 @@ class CurrencyAdapter :
         BaseRecyclerAdapter.ViewHolder<Currency>(itemView) {
         private val currencyName: TextView = itemView.findViewById(R.id.currency_name)
         private val currencyValue: EditText = itemView.findViewById(R.id.currency_value)
+        private val touchHelper: View = itemView.findViewById(R.id.touch_helper)
         private var changeValueDisposable = Disposables.disposed()
 
         init {
-            itemView.setOnClickListener {
-                currencyValue.removeTextChangedListener(baseTextWatcher)
+            touchHelper.setOnClickListener {
                 riseItem(adapterPosition)
             }
         }
@@ -65,13 +66,22 @@ class CurrencyAdapter :
             currencyValue.isEnabled = model.isBaseCurrency
             currencyValue.removeTextChangedListener(baseTextWatcher)
 
+            if (!changeValueDisposable.isDisposed) {
+                viewHolderDisposables.remove(changeValueDisposable)
+            }
+
             if (model.isBaseCurrency) {
+                touchHelper.isVisible = false
                 currencyValue.setText(model.value.value.toFormatedString())
+
+                baseTextWatcher.editText = currencyValue
                 currencyValue.addTextChangedListener(baseTextWatcher)
+
                 currencyValue.requestFocus()
             } else {
+                touchHelper.isVisible = true
                 changeValueDisposable =
-                    model.value.subscribe{
+                    model.value.subscribe {
                         currencyValue.setText(it.toFormatedString())
                     }
                 viewHolderDisposables.add(changeValueDisposable)
