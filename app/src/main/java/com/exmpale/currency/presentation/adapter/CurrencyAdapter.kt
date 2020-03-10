@@ -52,42 +52,35 @@ class CurrencyAdapter :
         private val currencyName: TextView = itemView.findViewById(R.id.currency_name)
         private val currencyValue: EditText = itemView.findViewById(R.id.currency_value)
         private var changeValueDisposable = Disposables.disposed()
-        private var changeBaseCurrencyDisposable = Disposables.disposed()
 
         init {
             itemView.setOnClickListener {
+                currencyValue.removeTextChangedListener(baseTextWatcher)
                 riseItem(adapterPosition)
             }
         }
 
         override fun bindHolder(model: Currency) {
             currencyName.text = model.name
+            currencyValue.isEnabled = model.isBaseCurrency
+            currencyValue.removeTextChangedListener(baseTextWatcher)
 
-            changeBaseCurrencyDisposable = model.isBaseCurrency.subscribe {isBaseCurrency ->
-                currencyValue.isEnabled = isBaseCurrency
-
-                if (isBaseCurrency) {
-                    viewHolderDisposables.remove(changeValueDisposable)
-
-                    currencyValue.setText(model.value.value.toFormatedString())
-                    currencyValue.addTextChangedListener(baseTextWatcher)
-
-                } else {
-                    currencyValue.removeTextChangedListener(baseTextWatcher)
-                    changeValueDisposable =
-                        model.value.subscribe {
-                            currencyValue.setText(it.toFormatedString())
-                        }
-                    viewHolderDisposables.add(changeValueDisposable)
-                }
+            if (model.isBaseCurrency) {
+                currencyValue.setText(model.value.value.toFormatedString())
+                currencyValue.addTextChangedListener(baseTextWatcher)
+                currencyValue.requestFocus()
+            } else {
+                changeValueDisposable =
+                    model.value.subscribe{
+                        currencyValue.setText(it.toFormatedString())
+                    }
+                viewHolderDisposables.add(changeValueDisposable)
             }
-            viewHolderDisposables.add(changeBaseCurrencyDisposable)
 
         }
 
         override fun unbindHolder() {
             viewHolderDisposables.remove(changeValueDisposable)
-            viewHolderDisposables.remove(changeBaseCurrencyDisposable)
         }
     }
 }

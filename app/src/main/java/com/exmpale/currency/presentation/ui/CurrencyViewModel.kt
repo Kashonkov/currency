@@ -14,13 +14,11 @@ import io.reactivex.schedulers.Schedulers
 import io.reactivex.subjects.BehaviorSubject
 import timber.log.Timber
 import java.text.NumberFormat
-import java.util.*
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
 
 /**
  * @author Kashonkov Nikita
@@ -28,21 +26,20 @@ import javax.inject.Inject
 const val PERIOD_IN_SECONDS = 1L
 
 class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : ViewModel() {
+
+    private val _errorsStream = MutableLiveData<String?>()
+    val errorsStream: LiveData<String?>
+        get() = _errorsStream
+
+    private val _currenciesStream = MutableLiveData<List<Currency>>()
+    val currenciesStream: LiveData<List<Currency>>
+        get() = _currenciesStream
+
     private var currencySubscription = Disposables.disposed()
-
     private var currentBaseCurrency: Currency? = null
-
     private var currentInputedValue = 228.30
 
-    private val _errors = MutableLiveData<String?>()
-    val errors: LiveData<String?>
-        get() = _errors
-
-    private val _currencies = MutableLiveData<List<Currency>>()
-    val currencies: LiveData<List<Currency>>
-        get() = _currencies
-
-    private var currenciesData: MutableList<Currency>? = null
+    private var currencies: List<Currency>? = null
     private var currentRates: RatesEntity? = null
 
     init {
@@ -58,20 +55,13 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         val format: NumberFormat = NumberFormat.getInstance()
         val number: Number? = format.parse(value)
         currentInputedValue = number?.toDouble() ?: 0.0
-        if (this.currenciesData != null) {
+        if (this.currencies != null) {
             countCurrencyValues()
         }
     }
 
     fun onBaseCurrencySelected(currencyPosition: Int) {
-        currencySubscription.dispose()
-//        currentBaseCurrency!!.isBaseCurrency.onNext(false)
-//        currentBaseCurrency = currenciesData!![currencyPosition]
-//        currentInputedValue = currentBaseCurrency!!.value.value
-//        currentBaseCurrency!!.isBaseCurrency.onNext(true)
-        reorderCurrencies(currencyPosition)
-        _currencies.postValue(currenciesData)
-        getCurrency()
+        changeBaseCurrency(currencyPosition)
     }
 
     private fun getCurrency() {
@@ -87,7 +77,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                 .retry()
                 .subscribe({ result ->
                     if (result.isSuccessful) {
-                        _errors.postValue(null)
+                        _errorsStream.postValue(null)
                         val ratesEntity = result.data
                         if (!ratesEntity!!.isCurrenciesEquals(currentRates)) {
                             currentRates = ratesEntity
@@ -100,13 +90,13 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                         Timber.i(result.data.baseCurrencyRate.name)
                     } else {
                         result.error?.let { error ->
-                            _errors.postValue(error.message)
+                            _errorsStream.postValue(error.message)
                         }
                         Timber.i(result.error?.message)
                     }
                 }, { error ->
                     error.localizedMessage?.let {
-                        _errors.postValue(error.localizedMessage)
+                        _errorsStream.postValue(error.localizedMessage)
                     }
                     Timber.i(error.localizedMessage)
                 })
@@ -123,7 +113,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
 
             currentBaseCurrency = Currency(
                 rates.baseCurrencyRate.name,
-                BehaviorSubject.createDefault(true),
+                true,
                 BehaviorSubject.createDefault(currentInputedValue)
             )
             currencyList.add(currentBaseCurrency!!)
@@ -131,7 +121,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                 currencyList.addAll(it.values.map { currencyRate ->
                     Currency(
                         currencyRate.name,
-                        BehaviorSubject.createDefault(false),
+                        false,
                         BehaviorSubject.createDefault(countValue(currencyRate.rate))
                     )
                 })
@@ -139,7 +129,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         } else {
             currentBaseCurrency = Currency(
                 currentBaseCurrency!!.name,
-                BehaviorSubject.createDefault(true),
+                true,
                 BehaviorSubject.createDefault(currentInputedValue)
             )
             currencyList.add(currentBaseCurrency!!)
@@ -148,7 +138,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
             currencyList.add(
                 Currency(
                     rates.baseCurrencyRate.name,
-                    BehaviorSubject.createDefault(false),
+                    false,
                     BehaviorSubject.createDefault(currentInputedValue / selectedCurrencyRate)
                 )
             )
@@ -158,7 +148,7 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                     currencyList.add(
                         Currency(
                             currencyRate.name,
-                            BehaviorSubject.createDefault(false),
+                            false,
                             BehaviorSubject.createDefault(
                                 countValueCross(
                                     selectedCurrencyRate,
@@ -170,16 +160,17 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
                 }
             }
         }
-        currenciesData = currencyList
-        _currencies.postValue(currenciesData!!)
+        currencies = currencyList
+        _currenciesStream.postValue(currencies!!)
     }
 
     private fun countCurrencyValues() {
+        Timber.i("recounting")
         if (currentBaseCurrency!!.name != currentRates?.baseCurrencyRate?.name) {
             countCurrencyValuesUsingCrosses()
         } else {
-            currenciesData!!.forEach { currency ->
-                if (currency.isBaseCurrency.value) {
+            currencies!!.forEach { currency ->
+                if (currency.isBaseCurrency) {
                     currency.value.onNext(currentInputedValue)
                 } else {
                     currentRates!!.currenciesRates?.let {
@@ -192,8 +183,8 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
 
     private fun countCurrencyValuesUsingCrosses() {
         val baseCurrencyRate = currentRates!!.currenciesRates!![currentBaseCurrency!!.name]!!.rate
-        currenciesData!!.forEach { currency ->
-            if (currency.isBaseCurrency.value) {
+        currencies!!.forEach { currency ->
+            if (currency.isBaseCurrency) {
                 currency.value.onNext(currentInputedValue)
             } else if (currency.name == currentRates!!.baseCurrencyRate.name) {
                 currency.value.onNext(currentInputedValue / baseCurrencyRate)
@@ -210,12 +201,38 @@ class CurrencyViewModel @Inject constructor(val useCase: GetCurrencyUseCase) : V
         }
     }
 
-    private fun reorderCurrencies(swappedPosition: Int){
-        for (i in swappedPosition downTo 1){
-            Collections.swap(currenciesData!!, i, i-1)
+    private fun reorderCurrencies(
+        swappedPosition: Int,
+        oldBase: Currency,
+        newBase: Currency
+    ): List<Currency> {
+        val newCurrencies = mutableListOf<Currency>()
+        newCurrencies.add(newBase)
+        newCurrencies.add(oldBase)
+        for (i in currencies!!.indices) {
+            if (i != 0 && i != swappedPosition){
+                newCurrencies.add(currencies!![i])
+            }
         }
-        val y = 1+1
+        return newCurrencies
     }
+
+    private fun changeBaseCurrency(currencyPosition: Int) {
+        if(currentBaseCurrency === currencies!![currencyPosition]) return
+        currencySubscription.dispose()
+
+        val oldBaseCurrency = currentBaseCurrency!!.copy(isBaseCurrency = false)
+        val newBaseCurrency = currencies!![currencyPosition].copy(isBaseCurrency = true)
+        currencies = reorderCurrencies(currencyPosition, oldBaseCurrency, newBaseCurrency)
+        currentBaseCurrency = newBaseCurrency
+        currentInputedValue = currentBaseCurrency!!.value.value
+        Timber.i("currentValue = $currentInputedValue")
+        getCurrency()
+
+        _currenciesStream.postValue(currencies)
+
+    }
+
     private fun countValue(rate: Double) = currentInputedValue * rate
     private fun countValueCross(crossRate: Double, rate: Double) =
         currentInputedValue / crossRate * rate

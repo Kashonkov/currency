@@ -13,6 +13,6 @@ class CurrencyDiffUtils(newItems: List<Currency>, oldItems: List<Currency>): Bas
     }
 
     override fun areContentsTheSame(oldItem: Currency, newItem: Currency): Boolean {
-        return oldItem.value === newItem.value
+        return oldItem.value === newItem.value && oldItem.isBaseCurrency == newItem.isBaseCurrency
     }
 }

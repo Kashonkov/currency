@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.exmpale.AppComponent
 import com.exmpale.currency.R
 import com.exmpale.currency.presentation.adapter.CurrencyAdapter
+import com.exmpale.currency.presentation.adapter.LastItemDivider
 import com.exmpale.currency.presentation.model.Currency
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_currency.*
@@ -64,6 +65,7 @@ class CurrencyFragment : Fragment() {
         recycler.apply {
             layoutManager = linearManager
             adapter = currencyAdapter
+            addItemDecoration(LastItemDivider())
         }
         initObservers()
     }
@@ -74,8 +76,8 @@ class CurrencyFragment : Fragment() {
     }
 
     private fun initObservers() {
-        viewModel.errors.observe(viewLifecycleOwner, errorObserver)
-        viewModel.currencies.observe(viewLifecycleOwner, dataObserver)
+        viewModel.errorsStream.observe(viewLifecycleOwner, errorObserver)
+        viewModel.currenciesStream.observe(viewLifecycleOwner, dataObserver)
     }
 
     private val errorObserver = Observer<String?> { message ->

@@ -7,6 +7,6 @@ import io.reactivex.subjects.BehaviorSubject
  */
 data class Currency(
     val name: String,
-    val isBaseCurrency: BehaviorSubject<Boolean>,
+    val isBaseCurrency: Boolean,
     val value: BehaviorSubject<Double>
 )

@@ -5,4 +5,5 @@
     <string name="error_no_internet_connection">Нет соединения с интернетом</string>
     <string name="error_timeout">Ответ от сервера не получен</string>
     <string name="error_connect">Сервер недоступен</string>
+    <string name="rates_title">Rates</string>
 </resources>
