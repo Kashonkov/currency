@@ -79,9 +79,9 @@ class CurrencyAdapter :
             } else {
                 touchHelper.isVisible = true
                 changeValueDisposable =
-                    model.value.observeOn(AndroidSchedulers.mainThread()).subscribe {
+                    model.value.observeOn(AndroidSchedulers.mainThread()).subscribe( {
                         currencyValue.setText(it.toFormatedString())
-                    }
+                    }, {currencyValue.setText(0.0.toFormatedString())})
                 viewHolderDisposables.add(changeValueDisposable)
             }
         }
